@@ -1,0 +1,11 @@
+scripts/*.min.js
+packages/*/dist/
+
+
+node_modules
+yarn.lock
+.vscode
+
+
+#For testing
+test.html
