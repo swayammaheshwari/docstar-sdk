@@ -3,7 +3,7 @@
 
 (function () {
     // Log connection success message
-    console.log('connected successfully new');
+    console.log('connected successfully new one');
 
     // Optional: You can also add additional initialization logic here
     // For example, setting up global variables or event listeners
