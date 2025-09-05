@@ -1,0 +1,16 @@
+{
+  "name": "docstar-sdk",
+  "version": "1.0.0",
+  "description": "DocStar SDK - Powerful search functionality for modern web applications",
+  "main": "scripts/search-sdk/search-sdk.script.js",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "minify": "terser scripts/search-sdk/search-sdk.script.js -o scripts/search-sdk/search-sdk.script.min.js --compress --mangle"
+  },
+  "keywords": ["search", "sdk", "javascript", "modal", "docstar"],
+  "author": "DocStar SDK Team",
+  "license": "MIT",
+  "devDependencies": {
+    "terser": "^5.19.2"
+  }
+}
