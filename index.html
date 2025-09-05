@@ -4,35 +4,536 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DocStar Search SDK Demo</title>
+    <title>Welcome to DocStar SDK</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
 
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #1f2937;
+        }
+
+        .navbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .nav-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: white;
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-links a {
+            color: rgba(255, 255, 255, 0.9);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .nav-links a:hover {
+            color: white;
+        }
+
+        .hero {
+            text-align: center;
+            padding: 80px 20px;
+            color: white;
+        }
+
+        .hero h1 {
+            font-size: 3.5rem;
+            font-weight: 800;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #ffffff 0%, #f0f9ff 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 40px;
+            opacity: 0.9;
+            max-width: 500px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+
+        .hero-buttons {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            padding: 15px 30px;
+            border-radius: 12px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s ease;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+        }
+
+        .btn-primary {
+            background: white;
+            color: #667eea;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.2);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .main-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 60px 20px;
+        }
+
+        .sdk-container {
+            max-width: 800px;
+            margin: 40px auto 0;
+        }
+
+        .sdk-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s ease;
+        }
+
+        .sdk-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .sdk-header {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .sdk-icon {
+            width: 50px;
+            height: 50px;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+        }
+
+        .sdk-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #1f2937;
+        }
+
+        .sdk-description {
+            color: #6b7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+
+        .section-title {
+            text-align: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 20px;
+        }
+
+        .section-subtitle {
+            text-align: center;
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.8);
+            margin-bottom: 40px;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: #374151;
+            margin-bottom: 8px;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus {
+            outline: none;
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+
+        .btn-configure {
+            width: 100%;
+            background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+
+        .btn-configure:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(59, 130, 246, 0.3);
+        }
+
+        .btn-configure:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .btn-test {
+            width: 100%;
+            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+            color: white;
+            border: none;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn-test:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-test:disabled {
+            background: #9ca3af;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .status {
+            margin-top: 20px;
+            padding: 12px 16px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .status.success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #a7f3d0;
+        }
+
+        .status.error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+
+        .keyboard-hint {
+            text-align: center;
+            margin-top: 30px;
+            padding: 20px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 12px;
+            color: #1e40af;
+        }
+
+        .keyboard-hint kbd {
+            background: white;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .coming-soon {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            text-align: center;
+            color: #6b7280;
+            border: 2px dashed #d1d5db;
+        }
+
+        .coming-soon h3 {
+            color: #374151;
+            margin-bottom: 10px;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: rgba(255, 255, 255, 0.8);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            margin-top: 60px;
+        }
+
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+            
+            .sdk-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .nav-links {
+                display: none;
+            }
+        }
+    </style>
 </head>
 
 <body>
-    <div class="demo-buttons">
-        <button class="demo-button" onclick="window.DocStarSearch.open()">
-            🔍 Open Search Modal
-        </button>
-    </div>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="logo">⭐ DocStar SDK</div>
+            <div class="nav-links">
+                <a href="#sdks">SDKs</a>
+                <a href="#docs">Documentation</a>
+                <a href="#support">Support</a>
+            </div>
+        </div>
+    </nav>
 
+    <!-- Hero Section -->
+    <section class="hero">
+        <h1>Welcome to DocStar SDK</h1>
+        <p>Powerful, easy-to-integrate search functionality for modern web applications. Start building amazing search experiences today.</p>
+        <div class="hero-buttons">
+            <a href="#sdks" class="btn btn-primary">Explore SDKs</a>
+            <a href="#docs" class="btn btn-secondary">View Documentation</a>
+        </div>
+    </section>
 
+    <!-- Main Content -->
+    <main class="main-content">
+        <section id="sdks">
+            <h2 class="section-title">Search SDK</h2>
+            <p class="section-subtitle">A powerful search modal with dark blur background, debounced API calls, and multiple opening modes</p>
+            
+            <div class="sdk-container">
+                <div class="sdk-card">
+                    <div class="sdk-header">
+                        <div class="sdk-icon">🔍</div>
+                        <h3 class="sdk-title">Search SDK</h3>
+                    </div>
+                    <p class="sdk-description">
+                        Perfect for adding instant search functionality to any website. Features beautiful UI with animations, 
+                        configurable opening modes, and seamless integration with any web framework.
+                    </p>
+                    
+                    <form id="configForm">
+                        <div class="form-group">
+                            <label for="apiEndpoint">API Endpoint *</label>
+                            <input type="url" id="apiEndpoint" placeholder="http://localhost:2000/p/global-search-sdk" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="collectionId">Collection ID *</label>
+                            <input type="text" id="collectionId" placeholder="collectionId" required>
+                        </div>
+
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="openMode">Open Mode *</label>
+                                <select id="openMode" required>
+                                    <option value="">Select mode...</option>
+                                    <option value="iframe">Iframe Sidebar</option>
+                                    <option value="newTab">New Tab</option>
+                                    <option value="currentTab">Current Tab</option>
+                                </select>
+                            </div>
+
+                            <div class="form-group">
+                                <label for="debounceDelay">Debounce Delay (ms)</label>
+                                <input type="number" id="debounceDelay" value="300" min="100" max="2000">
+                            </div>
+                        </div>
+
+                        <button type="submit" class="btn-configure">Configure Search SDK</button>
+                    </form>
+
+                    <button id="searchBtn" class="btn-test" disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <circle cx="11" cy="11" r="8"></circle>
+                            <path d="m21 21-4.35-4.35"></path>
+                        </svg>
+                        Test Search Modal
+                    </button>
+
+                    <div id="status"></div>
+
+                    <div class="keyboard-hint">
+                        💡 <strong>Pro tip:</strong> Press <kbd>Cmd</kbd> + <kbd>K</kbd> (Mac) or <kbd>Ctrl</kbd> + <kbd>K</kbd> (Windows) to open search from anywhere!
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <p>&copy; 2025 DocStar SDK. Built with ❤️ for developers.</p>
+    </footer>
 
     <!-- Include the DocStar Search SDK -->
-    <script src="./scripts/search-sdk/search-sdk.script.js"></script>
+    <script src="https://swayammaheshwari.github.io/docstar-sdk/scripts/search-sdk/search-sdk.script.js"></script>
 
     <script>
-        // Optional: Configure the SDK with custom settings
-        window.DocStarSearch.configure({
-            apiEndpoint: 'http://localhost:2000/p/global-search-sdk',
-            collectionId: '1FsRxMpXBD2i',
-            debounceDelay: 300,
-            minSearchLength: 2,
-            openMode: 'currentTab'
+        let isConfigured = false;
+
+        // Form elements
+        const form = document.getElementById('configForm');
+        const searchBtn = document.getElementById('searchBtn');
+        const statusDiv = document.getElementById('status');
+
+        function showStatus(message, type) {
+            statusDiv.innerHTML = message;
+            statusDiv.className = `status ${type}`;
+            statusDiv.style.display = 'block';
+        }
+
+        function hideStatus() {
+            statusDiv.style.display = 'none';
+        }
+
+        // Handle form submission
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const apiEndpoint = document.getElementById('apiEndpoint').value.trim();
+            const collectionId = document.getElementById('collectionId').value.trim();
+            const openMode = document.getElementById('openMode').value;
+            const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
+
+            // Validate required fields
+            if (!apiEndpoint || !collectionId || !openMode) {
+                showStatus('❌ Please fill in all required fields (marked with *)', 'error');
+                return;
+            }
+
+            try {
+                // Configure the SDK
+                window.DocStarSearch.configure({
+                    apiEndpoint: apiEndpoint,
+                    collectionId: collectionId,
+                    openMode: openMode,
+                    debounceDelay: debounceDelay,
+                    minSearchLength: 2
+                });
+
+                isConfigured = true;
+                searchBtn.disabled = false;
+                showStatus('✅ SDK configured successfully! You can now use the search.', 'success');
+                
+                console.log('DocStar Search SDK configured with:', {
+                    apiEndpoint,
+                    collectionId,
+                    openMode,
+                    debounceDelay
+                });
+
+            } catch (error) {
+                showStatus('❌ Configuration failed: ' + error.message, 'error');
+                console.error('Configuration error:', error);
+            }
         });
 
-        // Demo: Show how to programmatically open the search
-        console.log('DocStar Search SDK loaded!');
-        console.log('Try pressing Cmd/Ctrl + K to open the search modal');
+        // Handle search button click
+        searchBtn.addEventListener('click', function() {
+            if (isConfigured && window.DocStarSearch) {
+                window.DocStarSearch.open();
+            } else {
+                showStatus('❌ Please configure the SDK first', 'error');
+            }
+        });
+
+        // Auto-configure on page load for demo purposes
+        setTimeout(() => {
+            form.dispatchEvent(new Event('submit'));
+        }, 500);
     </script>
 </body>
 

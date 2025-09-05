@@ -1,10 +1,10 @@
-(function() {
+(function () {
   'use strict';
 
-  // Configuration
-  const CONFIG = {
-    apiEndpoint: 'http://localhost:2000/p/global-search-sdk',
-    collectionId: '1FsRxMpXBD2i',
+  // Configuration - will be set by user via configure() method
+  let CONFIG = {
+    apiEndpoint: null,
+    collectionId: null,
     debounceDelay: 300,
     minSearchLength: 2,
     openMode: 'iframe' // 'iframe', 'newTab', or 'currentTab'
@@ -18,10 +18,11 @@
   let isModalOpen = false;
   let iframeSidebar = null;
   let isIframeOpen = false;
+  let isConfigured = false;
 
   // Debounce function
   function debounce(func, delay) {
-    return function(...args) {
+    return function (...args) {
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => func.apply(this, args), delay);
     };
@@ -461,7 +462,7 @@
     const resultsHTML = links.map((item, index) => {
       const url = item.link || '#';
       const title = item.name || 'Untitled';
-      
+
       return `
         <div class="docstar-search-result-item" data-index="${index}" data-url="${url}" onclick="handleResultClick('${url}', event)">
           <svg class="docstar-search-result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -480,11 +481,11 @@
   }
 
   // Handle result click
-  window.handleResultClick = function(url, event) {
+  window.handleResultClick = function (url, event) {
     event.preventDefault();
-    
+
     const openMode = CONFIG.openMode;
-    
+
     if (openMode === 'iframe') {
       openInIframeSidebar(url);
     } else if (openMode === 'newTab') {
@@ -492,7 +493,7 @@
     } else if (openMode === 'currentTab') {
       window.location.href = url;
     }
-    
+
     // Close search modal
     closeModal();
   };
@@ -502,7 +503,6 @@
     const sidebarHTML = `
       <div id="docstar-iframe-sidebar" class="docstar-iframe-sidebar">
         <div class="docstar-iframe-header">
-          <h3 class="docstar-iframe-title">Preview</h3>
           <div class="docstar-iframe-actions">
             <button class="docstar-iframe-new-tab" onclick="openCurrentIframeInNewTab()" aria-label="Open in new tab">
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -523,11 +523,11 @@
         <iframe id="docstar-iframe-content" class="docstar-iframe-content" src="about:blank"></iframe>
       </div>
     `;
-    
+
     const sidebarContainer = document.createElement('div');
     sidebarContainer.innerHTML = sidebarHTML;
     document.body.appendChild(sidebarContainer.firstElementChild);
-    
+
     iframeSidebar = document.getElementById('docstar-iframe-sidebar');
   }
 
@@ -536,19 +536,19 @@
     if (!iframeSidebar) {
       createIframeSidebar();
     }
-    
+
     const iframe = document.getElementById('docstar-iframe-content');
     iframe.src = url;
-    
+
     iframeSidebar.classList.add('open');
     isIframeOpen = true;
-    
+
     // Adjust body padding
     document.body.style.paddingRight = '30%';
   }
 
   // Open current iframe content in new tab
-  window.openCurrentIframeInNewTab = function() {
+  window.openCurrentIframeInNewTab = function () {
     const iframe = document.getElementById('docstar-iframe-content');
     if (iframe && iframe.src && iframe.src !== 'about:blank') {
       window.open(iframe.src, '_blank');
@@ -556,14 +556,14 @@
   };
 
   // Close iframe sidebar
-  window.closeIframeSidebar = function() {
+  window.closeIframeSidebar = function () {
     if (iframeSidebar) {
       iframeSidebar.classList.remove('open');
       isIframeOpen = false;
-      
+
       // Reset body padding
       document.body.style.paddingRight = '';
-      
+
       // Clear iframe src after animation
       setTimeout(() => {
         const iframe = document.getElementById('docstar-iframe-content');
@@ -612,7 +612,7 @@
   // Handle search input
   function handleSearchInput(event) {
     const searchTerm = event.target.value.trim();
-    
+
     if (searchTerm === '') {
       showEmptyState();
       return;
@@ -623,12 +623,17 @@
 
   // Open modal
   function openModal() {
+    if (!isConfigured) {
+      console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
+      return;
+    }
+
     if (isModalOpen) return;
-    
+
     isModalOpen = true;
     searchModal.classList.add('open');
     document.body.style.overflow = 'hidden';
-    
+
     // Focus on input after animation
     setTimeout(() => {
       searchInput.focus();
@@ -638,11 +643,11 @@
   // Close modal
   function closeModal() {
     if (!isModalOpen) return;
-    
+
     isModalOpen = false;
     searchModal.classList.remove('open');
     document.body.style.overflow = '';
-    
+
     // Clear search
     searchInput.value = '';
     showEmptyState();
@@ -653,6 +658,10 @@
     // Global Cmd/Ctrl + K shortcut
     if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
       event.preventDefault();
+      if (!isConfigured) {
+        console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
+        return;
+      }
       openModal();
       return;
     }
@@ -664,7 +673,7 @@
         closeModal();
       }
     }
-    
+
     // Iframe-specific shortcuts
     if (isIframeOpen) {
       if (event.key === 'Escape') {
@@ -691,7 +700,7 @@
 
     // Add event listeners
     searchInput.addEventListener('input', handleSearchInput);
-    
+
     // Close button
     const closeButton = searchModal.querySelector('.docstar-search-close');
     closeButton.addEventListener('click', closeModal);
@@ -711,24 +720,48 @@
     document.addEventListener('keydown', handleKeydown);
 
     // Custom event listener for opening modal
-    window.addEventListener('openPublicSearchBar', openModal);
+    window.addEventListener('openPublicSearchBar', () => {
+      if (!isConfigured) {
+        console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
+        return;
+      }
+      openModal();
+    });
   }
 
   // Configuration function
   window.DocStarSearch = {
-    init: function(options = {}) {
-      // Merge options with default config
-      Object.assign(CONFIG, options);
-      
-      // Initialize modal
+    init: function (options = {}) {
+      // Initialize modal without configuration
       initializeModal();
     },
-    
+
     open: openModal,
     close: closeModal,
-    
-    configure: function(options) {
+
+    configure: function (options) {
+      // Validate required fields
+      if (!options.apiEndpoint) {
+        throw new Error('DocStar Search SDK: apiEndpoint is required');
+      }
+      if (!options.collectionId) {
+        throw new Error('DocStar Search SDK: collectionId is required');
+      }
+      if (!options.openMode) {
+        throw new Error('DocStar Search SDK: openMode is required (iframe, newTab, or currentTab)');
+      }
+
+      // Validate openMode values
+      const validModes = ['iframe', 'newTab', 'currentTab'];
+      if (!validModes.includes(options.openMode)) {
+        throw new Error('DocStar Search SDK: openMode must be one of: iframe, newTab, currentTab');
+      }
+
+      // Merge options with default config
       Object.assign(CONFIG, options);
+      isConfigured = true;
+
+      console.log('DocStar Search SDK: Configuration successful');
     }
   };
 
