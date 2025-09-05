@@ -214,6 +214,73 @@
             width: auto;
         }
 
+        .code-snippet {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 20px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 14px;
+            line-height: 1.5;
+            color: #e2e8f0;
+            overflow-x: auto;
+            border: 1px solid #334155;
+        }
+
+        .code-snippet-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #334155;
+        }
+
+        .code-snippet-title {
+            color: #94a3b8;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .copy-btn {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: #2563eb;
+        }
+
+        .code-snippet pre {
+            margin: 0;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+
+        .code-snippet .comment {
+            color: #64748b;
+        }
+
+        .code-snippet .string {
+            color: #22d3ee;
+        }
+
+        .code-snippet .keyword {
+            color: #f472b6;
+        }
+
+        .code-snippet .function {
+            color: #a78bfa;
+        }
+
         .form-group input,
         .form-group select {
             width: 100%;
@@ -467,6 +534,14 @@
 
                     <div id="status"></div>
 
+                    <div id="codeSnippet" class="code-snippet" style="display: none;">
+                        <div class="code-snippet-header">
+                            <span class="code-snippet-title">Integration Code</span>
+                            <button class="copy-btn" onclick="copyCode()">Copy</button>
+                        </div>
+                        <pre id="codeContent"></pre>
+                    </div>
+
                     <div class="keyboard-hint">
                         💡 <strong>Pro tip:</strong> Press <kbd>Cmd</kbd> + <kbd>K</kbd> (Mac) or <kbd>Ctrl</kbd> +
                         <kbd>K</kbd> (Windows) to open search from anywhere!
@@ -533,6 +608,15 @@
                 searchBtn.disabled = false;
                 showStatus('✅ SDK configured successfully! You can now use the search.', 'success');
 
+                // Show integration code
+                showIntegrationCode({
+                    apiEndpoint,
+                    collectionId,
+                    openMode,
+                    debounceDelay,
+                    enableKeyboardShortcut
+                });
+
                 console.log('DocStar Search SDK configured with:', {
                     apiEndpoint,
                     collectionId,
@@ -556,10 +640,47 @@
             }
         });
 
-        // Auto-configure on page load for demo purposes
-        setTimeout(() => {
-            form.dispatchEvent(new Event('submit'));
-        }, 500);
+        // Show integration code snippet
+        function showIntegrationCode(config) {
+            const codeSnippet = document.getElementById('codeSnippet');
+            const codeContent = document.getElementById('codeContent');
+
+            const configCode = `<span class="comment"><!-- Include the DocStar Search SDK --></span>
+<span class="keyword">&lt;script</span> <span class="string">src="https://swayammaheshwari.github.io/docstar-sdk/scripts/search-sdk/search-sdk.script.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+
+<span class="comment"><!-- Configure the SDK --></span>
+<span class="keyword">&lt;script&gt;</span>
+  <span class="function">window.DocStarSearch.configure</span>({
+    <span class="string">apiEndpoint</span>: <span class="string">"${config.apiEndpoint}"</span>,
+    <span class="string">collectionId</span>: <span class="string">"${config.collectionId}"</span>,
+    <span class="string">openMode</span>: <span class="string">"${config.openMode}"</span>,
+    <span class="string">debounceDelay</span>: <span class="string">${config.debounceDelay}</span>,
+    <span class="string">enableKeyboardShortcut</span>: <span class="string">${config.enableKeyboardShortcut}</span>,
+    <span class="string">minSearchLength</span>: <span class="string">2</span>
+  });
+<span class="keyword">&lt;/script&gt;</span>`;
+
+            codeContent.innerHTML = configCode;
+            codeSnippet.style.display = 'block';
+        }
+
+        // Copy code to clipboard
+        function copyCode() {
+            const codeContent = document.getElementById('codeContent');
+            const textContent = codeContent.textContent || codeContent.innerText;
+
+            navigator.clipboard.writeText(textContent).then(() => {
+                const copyBtn = document.querySelector('.copy-btn');
+                const originalText = copyBtn.textContent;
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = originalText;
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy code:', err);
+            });
+        }
+
     </script>
 </body>
 
