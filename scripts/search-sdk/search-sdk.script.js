@@ -716,18 +716,8 @@
       event.stopPropagation();
     });
 
-
     // Global keyboard shortcuts
     document.addEventListener('keydown', handleKeydown);
-
-    // Custom event listener for opening modal
-    window.addEventListener('openPublicSearchBar', () => {
-      if (!isConfigured) {
-        console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
-        return;
-      }
-      openModal();
-    });
   }
 
   // Configuration function

@@ -18,7 +18,7 @@ A powerful, easy-to-integrate search functionality for modern web applications. 
 
 ```html
 <!-- Include the DocStar Search SDK -->
-<script src="https://swayammaheshwari.github.io/docstar-sdk/scripts/search-sdk/search-sdk.script.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/swayammaheshwari/docstar-sdk/scripts/search-sdk/search-sdk.script.min.js"></script>
 
 <!-- Configure the SDK -->
 <script>
@@ -60,13 +60,6 @@ window.DocStarSearch.open();
 
 // Close search modal
 window.DocStarSearch.close();
-```
-
-### Custom Event Trigger
-
-```javascript
-// Trigger search modal via custom event
-window.dispatchEvent(new CustomEvent('openPublicSearchBar'));
 ```
 
 ### React Integration
