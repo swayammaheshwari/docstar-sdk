@@ -197,10 +197,21 @@
 
         .form-group label {
             display: block;
+            margin-bottom: 8px;
             font-weight: 600;
             color: #374151;
-            margin-bottom: 8px;
-            font-size: 14px;
+        }
+
+        .checkbox-label {
+            display: flex !important;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin: 0;
+            width: auto;
         }
 
         .form-group input,
@@ -348,15 +359,15 @@
             .form-row {
                 grid-template-columns: 1fr;
             }
-            
+
             .hero h1 {
                 font-size: 2.5rem;
             }
-            
+
             .sdk-grid {
                 grid-template-columns: 1fr;
             }
-            
+
             .nav-links {
                 display: none;
             }
@@ -380,7 +391,8 @@
     <!-- Hero Section -->
     <section class="hero">
         <h1>Welcome to DocStar SDK</h1>
-        <p>Powerful, easy-to-integrate search functionality for modern web applications. Start building amazing search experiences today.</p>
+        <p>Powerful, easy-to-integrate search functionality for modern web applications. Start building amazing search
+            experiences today.</p>
         <div class="hero-buttons">
             <a href="#sdks" class="btn btn-primary">Explore SDKs</a>
             <a href="#docs" class="btn btn-secondary">View Documentation</a>
@@ -391,8 +403,9 @@
     <main class="main-content">
         <section id="sdks">
             <h2 class="section-title">Search SDK</h2>
-            <p class="section-subtitle">A powerful search modal with dark blur background, debounced API calls, and multiple opening modes</p>
-            
+            <p class="section-subtitle">A powerful search modal with dark blur background, debounced API calls, and
+                multiple opening modes</p>
+
             <div class="sdk-container">
                 <div class="sdk-card">
                     <div class="sdk-header">
@@ -400,19 +413,20 @@
                         <h3 class="sdk-title">Search SDK</h3>
                     </div>
                     <p class="sdk-description">
-                        Perfect for adding instant search functionality to any website. Features beautiful UI with animations, 
+                        Perfect for adding instant search functionality to any website. Features beautiful UI with
+                        animations,
                         configurable opening modes, and seamless integration with any web framework.
                     </p>
-                    
+
                     <form id="configForm">
                         <div class="form-group">
                             <label for="apiEndpoint">API Endpoint *</label>
-                            <input type="url" id="apiEndpoint" placeholder="http://localhost:2000/p/global-search-sdk" required>
+                            <input type="url" id="apiEndpoint" placeholder="value" required>
                         </div>
 
                         <div class="form-group">
                             <label for="collectionId">Collection ID *</label>
-                            <input type="text" id="collectionId" placeholder="collectionId" required>
+                            <input type="text" id="collectionId" placeholder="value" required>
                         </div>
 
                         <div class="form-row">
@@ -432,11 +446,19 @@
                             </div>
                         </div>
 
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableKeyboardShortcut" checked>
+                                Enable Cmd/Ctrl + K keyboard shortcut
+                            </label>
+                        </div>
+
                         <button type="submit" class="btn-configure">Configure Search SDK</button>
                     </form>
 
                     <button id="searchBtn" class="btn-test" disabled>
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
                             <circle cx="11" cy="11" r="8"></circle>
                             <path d="m21 21-4.35-4.35"></path>
                         </svg>
@@ -446,7 +468,8 @@
                     <div id="status"></div>
 
                     <div class="keyboard-hint">
-                        💡 <strong>Pro tip:</strong> Press <kbd>Cmd</kbd> + <kbd>K</kbd> (Mac) or <kbd>Ctrl</kbd> + <kbd>K</kbd> (Windows) to open search from anywhere!
+                        💡 <strong>Pro tip:</strong> Press <kbd>Cmd</kbd> + <kbd>K</kbd> (Mac) or <kbd>Ctrl</kbd> +
+                        <kbd>K</kbd> (Windows) to open search from anywhere!
                     </div>
                 </div>
             </div>
@@ -480,13 +503,14 @@
         }
 
         // Handle form submission
-        form.addEventListener('submit', function(e) {
+        form.addEventListener('submit', function (e) {
             e.preventDefault();
-            
+
             const apiEndpoint = document.getElementById('apiEndpoint').value.trim();
             const collectionId = document.getElementById('collectionId').value.trim();
             const openMode = document.getElementById('openMode').value;
             const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
+            const enableKeyboardShortcut = document.getElementById('enableKeyboardShortcut').checked;
 
             // Validate required fields
             if (!apiEndpoint || !collectionId || !openMode) {
@@ -501,28 +525,30 @@
                     collectionId: collectionId,
                     openMode: openMode,
                     debounceDelay: debounceDelay,
+                    enableKeyboardShortcut: enableKeyboardShortcut,
                     minSearchLength: 2
                 });
 
                 isConfigured = true;
                 searchBtn.disabled = false;
                 showStatus('✅ SDK configured successfully! You can now use the search.', 'success');
-                
+
                 console.log('DocStar Search SDK configured with:', {
                     apiEndpoint,
                     collectionId,
                     openMode,
-                    debounceDelay
+                    debounceDelay,
+                    enableKeyboardShortcut
                 });
 
             } catch (error) {
                 showStatus('❌ Configuration failed: ' + error.message, 'error');
-                console.error('Configuration error:', error);
+                console.log('Configuration error:', error);
             }
         });
 
         // Handle search button click
-        searchBtn.addEventListener('click', function() {
+        searchBtn.addEventListener('click', function () {
             if (isConfigured && window.DocStarSearch) {
                 window.DocStarSearch.open();
             } else {

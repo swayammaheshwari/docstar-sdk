@@ -7,7 +7,8 @@
     collectionId: null,
     debounceDelay: 300,
     minSearchLength: 2,
-    openMode: 'iframe' // 'iframe', 'newTab', or 'currentTab'
+    openMode: 'iframe', // 'iframe', 'newTab', or 'currentTab'
+    enableKeyboardShortcut: true // Enable Cmd/Ctrl+K shortcut
   };
 
   // Global state
@@ -655,8 +656,8 @@
 
   // Handle keyboard shortcuts
   function handleKeydown(event) {
-    // Global Cmd/Ctrl + K shortcut
-    if ((event.metaKey || event.ctrlKey) && event.key === 'k') {
+    // Global Cmd/Ctrl + K shortcut (only if enabled)
+    if (CONFIG.enableKeyboardShortcut && (event.metaKey || event.ctrlKey) && event.key === 'k') {
       event.preventDefault();
       if (!isConfigured) {
         console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
