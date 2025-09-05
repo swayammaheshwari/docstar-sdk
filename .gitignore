@@ -2,8 +2,12 @@ scripts/*.min.js
 packages/*/dist/
 
 
-node_modules
-yarn.lock
+node_modules/
+.DS_Store
+*.log
+
+# Minified files - built automatically by GitHub Actions
+**/*.min.js
 .vscode
 
 

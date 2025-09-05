@@ -17,16 +17,44 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  deploy:
-    environment:
-      name: github-pages
-      url: ${{ steps.deployment.outputs.page_url }}
+  build-and-deploy:
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    
     steps:
-    - name: Checkout
+    - name: Checkout code
       uses: actions/checkout@v4
-      
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
+    
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+    
+    - name: Install dependencies
+      run: npm install
+    
+    - name: Build minified files
+      run: npm run build
+    
+    - name: Commit minified files
+      run: |
+        git config --local user.email "action@github.com"
+        git config --local user.name "GitHub Action"
+        find scripts -name "*.min.js" -exec git add {} \;
+        if git diff --staged --quiet; then
+          echo "No changes to commit"
+        else
+          git commit -m "Auto-build: Update minified files [skip ci]"
+          git push
+        fi
+    
     - name: Setup Pages
       uses: actions/configure-pages@v4
       
