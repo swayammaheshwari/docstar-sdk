@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DocStar Search SDK Demo</title>
+
+</head>
+
+<body>
+    <div class="demo-buttons">
+        <button class="demo-button" onclick="window.DocStarSearch.open()">
+            🔍 Open Search Modal
+        </button>
+    </div>
+
+
+
+    <!-- Include the DocStar Search SDK -->
+    <script src="./scripts/search-sdk/search-sdk.script.js"></script>
+
+    <script>
+        // Optional: Configure the SDK with custom settings
+        window.DocStarSearch.configure({
+            apiEndpoint: 'http://localhost:2000/p/global-search-sdk',
+            collectionId: '1FsRxMpXBD2i',
+            debounceDelay: 300,
+            minSearchLength: 2,
+            openMode: 'currentTab'
+        });
+
+        // Demo: Show how to programmatically open the search
+        console.log('DocStar Search SDK loaded!');
+        console.log('Try pressing Cmd/Ctrl + K to open the search modal');
+    </script>
+</body>
+
+</html>
