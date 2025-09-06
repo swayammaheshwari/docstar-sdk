@@ -20,6 +20,8 @@
   let iframeSidebar = null;
   let isIframeOpen = false;
   let isConfigured = false;
+  let currentHighlightIndex = -1;
+  let searchResultItems = [];
 
   // Debounce function
   function debounce(func, delay) {
@@ -113,9 +115,9 @@
         left: 0;
         right: 0;
         bottom: 0;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(8px);
-        -webkit-backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
       }
 
       .docstar-search-container {
@@ -255,12 +257,7 @@
       }
 
       .docstar-search-result-url {
-        font-size: 12px;
-        color: #6b7280;
-        margin: 0;
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
+        display: none;
       }
 
       .docstar-search-loading {
@@ -301,6 +298,7 @@
       }
 
       .docstar-search-shortcut kbd {
+        color: #6b7280;
         background: white;
         border: 1px solid #d1d5db;
         border-radius: 3px;
@@ -479,6 +477,10 @@
     }).join('');
 
     searchResults.innerHTML = resultsHTML;
+    
+    // Update search result items for navigation
+    searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item');
+    currentHighlightIndex = -1;
   }
 
   // Handle result click
@@ -596,6 +598,57 @@
         <p>Start typing to search...</p>
       </div>
     `;
+    searchResultItems = [];
+    currentHighlightIndex = -1;
+  }
+
+  // Navigation functions
+  function highlightResult(index) {
+    // Remove previous highlight
+    searchResultItems.forEach(item => item.classList.remove('highlighted'));
+    
+    if (index >= 0 && index < searchResultItems.length) {
+      currentHighlightIndex = index;
+      searchResultItems[index].classList.add('highlighted');
+      
+      // Scroll into view if needed
+      searchResultItems[index].scrollIntoView({
+        behavior: 'smooth',
+        block: 'nearest'
+      });
+    } else {
+      currentHighlightIndex = -1;
+    }
+  }
+
+  function navigateUp() {
+    if (searchResultItems.length === 0) return;
+    
+    const newIndex = currentHighlightIndex <= 0 
+      ? searchResultItems.length - 1 
+      : currentHighlightIndex - 1;
+    
+    highlightResult(newIndex);
+  }
+
+  function navigateDown() {
+    if (searchResultItems.length === 0) return;
+    
+    const newIndex = currentHighlightIndex >= searchResultItems.length - 1 
+      ? 0 
+      : currentHighlightIndex + 1;
+    
+    highlightResult(newIndex);
+  }
+
+  function selectCurrentResult() {
+    if (currentHighlightIndex >= 0 && currentHighlightIndex < searchResultItems.length) {
+      const selectedItem = searchResultItems[currentHighlightIndex];
+      const url = selectedItem.getAttribute('data-url');
+      if (url) {
+        handleResultClick(url, { preventDefault: () => {} });
+      }
+    }
   }
 
   // Debounced search function
@@ -672,6 +725,15 @@
       if (event.key === 'Escape') {
         event.preventDefault();
         closeModal();
+      } else if (event.key === 'ArrowUp') {
+        event.preventDefault();
+        navigateUp();
+      } else if (event.key === 'ArrowDown') {
+        event.preventDefault();
+        navigateDown();
+      } else if (event.key === 'Enter') {
+        event.preventDefault();
+        selectCurrentResult();
       }
     }
 
