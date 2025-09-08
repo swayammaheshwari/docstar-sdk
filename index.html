@@ -487,16 +487,20 @@
 
                     <form id="configForm">
                         <div class="form-group">
-                            <label for="apiEndpoint">API Endpoint *</label>
-                            <input type="url" id="apiEndpoint" placeholder="value" required>
-                        </div>
-
-                        <div class="form-group">
                             <label for="collectionId">Collection ID *</label>
-                            <input type="text" id="collectionId" placeholder="value" required>
+                            <input type="text" id="collectionId" placeholder="Enter your collection ID" required>
                         </div>
 
                         <div class="form-row">
+                            <div class="form-group">
+                                <label for="environment">Environment</label>
+                                <select id="environment">
+                                    <option value="prod" selected>Production (api.docstar.io)</option>
+                                    <option value="dev">Development (dev-api.docstar.io)</option>
+                                    <option value="local">Local (localhost:2000)</option>
+                                </select>
+                            </div>
+
                             <div class="form-group">
                                 <label for="openMode">Open Mode *</label>
                                 <select id="openMode" required>
@@ -506,7 +510,9 @@
                                     <option value="currentTab">Current Tab</option>
                                 </select>
                             </div>
+                        </div>
 
+                        <div class="form-row">
                             <div class="form-group">
                                 <label for="debounceDelay">Debounce Delay (ms)</label>
                                 <input type="number" id="debounceDelay" value="300" min="100" max="2000">
@@ -530,6 +536,17 @@
                             <path d="m21 21-4.35-4.35"></path>
                         </svg>
                         Test Search Modal
+                    </button>
+
+                    <button id="generateCodeBtn" class="btn-test"
+                        style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); margin-top: 10px;"
+                        disabled>
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                            stroke-width="2">
+                            <polyline points="16,18 22,12 16,6"></polyline>
+                            <polyline points="8,6 2,12 8,18"></polyline>
+                        </svg>
+                        Generate Integration Code
                     </button>
 
                     <div id="status"></div>
@@ -557,7 +574,7 @@
     </footer>
 
     <!-- Include the DocStar Search SDK -->
-    <script src="https://swayammaheshwari.github.io/docstar-sdk/scripts/search-sdk/search-sdk.script.js"></script>
+    <script src="scripts/search-sdk/search-sdk.script.min.js"></script>
 
     <script>
         let isConfigured = false;
@@ -565,6 +582,7 @@
         // Form elements
         const form = document.getElementById('configForm');
         const searchBtn = document.getElementById('searchBtn');
+        const generateCodeBtn = document.getElementById('generateCodeBtn');
         const statusDiv = document.getElementById('status');
 
         function showStatus(message, type) {
@@ -581,14 +599,14 @@
         form.addEventListener('submit', function (e) {
             e.preventDefault();
 
-            const apiEndpoint = document.getElementById('apiEndpoint').value.trim();
             const collectionId = document.getElementById('collectionId').value.trim();
+            const environment = document.getElementById('environment').value;
             const openMode = document.getElementById('openMode').value;
             const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
             const enableKeyboardShortcut = document.getElementById('enableKeyboardShortcut').checked;
 
             // Validate required fields
-            if (!apiEndpoint || !collectionId || !openMode) {
+            if (!collectionId || !openMode) {
                 showStatus('❌ Please fill in all required fields (marked with *)', 'error');
                 return;
             }
@@ -596,8 +614,8 @@
             try {
                 // Configure the SDK
                 window.DocStarSearch.configure({
-                    apiEndpoint: apiEndpoint,
                     collectionId: collectionId,
+                    environment: environment,
                     openMode: openMode,
                     debounceDelay: debounceDelay,
                     enableKeyboardShortcut: enableKeyboardShortcut,
@@ -606,20 +624,21 @@
 
                 isConfigured = true;
                 searchBtn.disabled = false;
+                generateCodeBtn.disabled = false;
                 showStatus('✅ SDK configured successfully! You can now use the search.', 'success');
 
                 // Show integration code
                 showIntegrationCode({
-                    apiEndpoint,
                     collectionId,
+                    environment,
                     openMode,
                     debounceDelay,
                     enableKeyboardShortcut
                 });
 
                 console.log('DocStar Search SDK configured with:', {
-                    apiEndpoint,
                     collectionId,
+                    environment,
                     openMode,
                     debounceDelay,
                     enableKeyboardShortcut
@@ -640,18 +659,38 @@
             }
         });
 
+        // Handle generate code button click
+        generateCodeBtn.addEventListener('click', function () {
+            if (isConfigured) {
+                const collectionId = document.getElementById('collectionId').value.trim();
+                const environment = document.getElementById('environment').value;
+                const openMode = document.getElementById('openMode').value;
+                const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
+                const enableKeyboardShortcut = document.getElementById('enableKeyboardShortcut').checked;
+
+                showIntegrationCode({
+                    collectionId,
+                    environment,
+                    openMode,
+                    debounceDelay,
+                    enableKeyboardShortcut
+                });
+            } else {
+                showStatus('❌ Please configure the SDK first', 'error');
+            }
+        });
+
         // Show integration code snippet
         function showIntegrationCode(config) {
             const codeSnippet = document.getElementById('codeSnippet');
             const codeContent = document.getElementById('codeContent');
 
             const configCode = `<span class="comment"><!-- Include the DocStar Search SDK --></span>
-<span class="keyword">&lt;script</span> <span class="string">src="https://swayammaheshwari.github.io/docstar-sdk/scripts/search-sdk/search-sdk.script.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
+<span class="keyword">&lt;script</span> <span class="string">src="https://script.docstar.io/scripts/search-sdk/search-sdk.script.min.js"</span><span class="keyword">&gt;&lt;/script&gt;</span>
 
 <span class="comment"><!-- Configure the SDK --></span>
 <span class="keyword">&lt;script&gt;</span>
   <span class="function">window.DocStarSearch.configure</span>({
-    <span class="string">apiEndpoint</span>: <span class="string">"${config.apiEndpoint}"</span>,
     <span class="string">collectionId</span>: <span class="string">"${config.collectionId}"</span>,
     <span class="string">openMode</span>: <span class="string">"${config.openMode}"</span>,
     <span class="string">debounceDelay</span>: <span class="string">${config.debounceDelay}</span>,

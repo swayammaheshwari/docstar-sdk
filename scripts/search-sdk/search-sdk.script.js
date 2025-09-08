@@ -1,9 +1,16 @@
 (function () {
   'use strict';
 
+  // API endpoints for different environments
+  const API_ENDPOINTS = {
+    local: 'http://localhost:2000/p/global-search',
+    dev: 'https://dev-api.docstar.io/p/global-search',
+    prod: 'https://api.docstar.io/p/global-search'
+  };
+
   // Configuration - will be set by user via configure() method
   let CONFIG = {
-    apiEndpoint: null,
+    environment: 'prod', // 'prod', 'dev', or 'local'
     collectionId: null,
     debounceDelay: 300,
     minSearchLength: 2,
@@ -415,14 +422,20 @@
   // API call function
   async function searchAPI(searchTerm) {
     try {
-      const response = await fetch(CONFIG.apiEndpoint, {
+      const apiEndpoint = API_ENDPOINTS[CONFIG.environment];
+      if (!apiEndpoint) {
+        throw new Error(`Invalid environment: ${CONFIG.environment}`);
+      }
+
+      const response = await fetch(apiEndpoint, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
           collectionId: CONFIG.collectionId,
-          searchTerm: searchTerm
+          searchTerm: searchTerm,
+          returnLinks: true,
         })
       });
 
@@ -477,7 +490,7 @@
     }).join('');
 
     searchResults.innerHTML = resultsHTML;
-    
+
     // Update search result items for navigation
     searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item');
     currentHighlightIndex = -1;
@@ -606,11 +619,11 @@
   function highlightResult(index) {
     // Remove previous highlight
     searchResultItems.forEach(item => item.classList.remove('highlighted'));
-    
+
     if (index >= 0 && index < searchResultItems.length) {
       currentHighlightIndex = index;
       searchResultItems[index].classList.add('highlighted');
-      
+
       // Scroll into view if needed
       searchResultItems[index].scrollIntoView({
         behavior: 'smooth',
@@ -623,21 +636,21 @@
 
   function navigateUp() {
     if (searchResultItems.length === 0) return;
-    
-    const newIndex = currentHighlightIndex <= 0 
-      ? searchResultItems.length - 1 
+
+    const newIndex = currentHighlightIndex <= 0
+      ? searchResultItems.length - 1
       : currentHighlightIndex - 1;
-    
+
     highlightResult(newIndex);
   }
 
   function navigateDown() {
     if (searchResultItems.length === 0) return;
-    
-    const newIndex = currentHighlightIndex >= searchResultItems.length - 1 
-      ? 0 
+
+    const newIndex = currentHighlightIndex >= searchResultItems.length - 1
+      ? 0
       : currentHighlightIndex + 1;
-    
+
     highlightResult(newIndex);
   }
 
@@ -646,7 +659,7 @@
       const selectedItem = searchResultItems[currentHighlightIndex];
       const url = selectedItem.getAttribute('data-url');
       if (url) {
-        handleResultClick(url, { preventDefault: () => {} });
+        handleResultClick(url, { preventDefault: () => { } });
       }
     }
   }
@@ -678,7 +691,7 @@
   // Open modal
   function openModal() {
     if (!isConfigured) {
-      console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
+      console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with collectionId and openMode.');
       return;
     }
 
@@ -713,7 +726,7 @@
     if (CONFIG.enableKeyboardShortcut && (event.metaKey || event.ctrlKey) && event.key === 'k') {
       event.preventDefault();
       if (!isConfigured) {
-        console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with apiEndpoint, collectionId, and openMode.');
+        console.error('DocStar Search SDK: Configuration required. Please call window.DocStarSearch.configure() with collectionId and openMode.');
         return;
       }
       openModal();
@@ -794,9 +807,6 @@
 
     configure: function (options) {
       // Validate required fields
-      if (!options.apiEndpoint) {
-        throw new Error('DocStar Search SDK: apiEndpoint is required');
-      }
       if (!options.collectionId) {
         throw new Error('DocStar Search SDK: collectionId is required');
       }
@@ -808,6 +818,16 @@
       const validModes = ['iframe', 'newTab', 'currentTab'];
       if (!validModes.includes(options.openMode)) {
         throw new Error('DocStar Search SDK: openMode must be one of: iframe, newTab, currentTab');
+      }
+
+      // Validate environment if provided
+      if (options.environment && !API_ENDPOINTS[options.environment]) {
+        throw new Error('DocStar Search SDK: environment must be one of: prod, dev, local');
+      }
+
+      // Set default environment to prod if not provided
+      if (!options.environment) {
+        options.environment = 'prod';
       }
 
       // Merge options with default config
