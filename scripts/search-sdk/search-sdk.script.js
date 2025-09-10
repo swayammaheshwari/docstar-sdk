@@ -8,6 +8,12 @@
     prod: 'https://api.docstar.io/p/global-search'
   };
 
+  // Function types for chatbot
+  const FUNCTION_TYPES = {
+    prod: 'production',
+    dev: 'development'
+  };
+
   // Configuration - will be set by user via configure() method
   let CONFIG = {
     environment: 'prod', // 'prod', 'dev', or 'local'
@@ -29,6 +35,9 @@
   let isConfigured = false;
   let currentHighlightIndex = -1;
   let searchResultItems = [];
+  let chatbotLoaded = false;
+  let threadId = null;
+  let chatbotInitialized = false;
 
   // Debounce function
   function debounce(func, delay) {
@@ -36,6 +45,90 @@
       clearTimeout(debounceTimer);
       debounceTimer = setTimeout(() => func.apply(this, args), delay);
     };
+  }
+
+  // Generate short ID for thread
+  function generateShortId() {
+    return Math.random().toString(36).substr(2, 9);
+  }
+
+  // Initialize chatbot with configuration
+  function initializeChatbot() {
+    if (chatbotInitialized || !isConfigured) return;
+
+    // Get or create thread ID
+    threadId = localStorage.getItem('threadId');
+    if (!threadId) {
+      threadId = generateShortId();
+      localStorage.setItem('threadId', threadId);
+    }
+
+    const timer = setInterval(() => {
+      if (typeof window?.SendDataToChatbot === 'function') {
+        const functionType = FUNCTION_TYPES[CONFIG.environment] || FUNCTION_TYPES.prod;
+
+        window.SendDataToChatbot({
+          bridgeName: 'techdoc_public_chatbot',
+          threadId: threadId,
+          helloId: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOiI1OTgyIiwiY2hhdGJvdF9pZCI6IjY2NTQ3OWE4YmQ1MDQxYWU5M2ZjZDNjNSIsInVzZXJfaWQiOiIxMjQifQ.aI4h6OmkVvQP5dyiSNdtKpA4Z1TVNdlKjAe5D8XCrew',
+          variables: {
+            collectionId: CONFIG.collectionId,
+            functionType: functionType,
+          },
+          hideIcon: 'true',
+        });
+
+        chatbotInitialized = true;
+        clearInterval(timer);
+        console.log('DocStar Chatbot initialized successfully');
+      }
+    }, 200);
+
+    // Cleanup after 10 seconds if not initialized
+    setTimeout(() => {
+      clearInterval(timer);
+    }, 10000);
+  }
+
+  // Load chatbot script
+  function loadChatbot() {
+    if (chatbotLoaded) return;
+
+    const chatbotScript = document.createElement('script');
+    chatbotScript.src = 'https://chatbot-embed.viasocket.com/chatbot-prod.js';
+    chatbotScript.id = 'chatbot-main-script';
+    chatbotScript.setAttribute('embedToken', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJvcmdfaWQiOiI1OTgyIiwiY2hhdGJvdF9pZCI6IjY2NTQ3OWE4YmQ1MDQxYWU5M2ZjZDNjNSIsInVzZXJfaWQiOiIxMjQifQ.aI4h6OmkVvQP5dyiSNdtKpA4Z1TVNdlKjAe5D8XCrew');
+
+    chatbotScript.onload = function () {
+      console.log('DocStar Chatbot loaded successfully');
+      chatbotLoaded = true;
+      // Initialize chatbot after loading
+      setTimeout(initializeChatbot, 500);
+    };
+
+    chatbotScript.onerror = function () {
+      console.error('Failed to load DocStar Chatbot');
+    };
+
+    document.head.appendChild(chatbotScript);
+  }
+
+  // Ask AI function
+  function askAI(query) {
+    if (typeof window?.askAi === 'function') {
+      window.askAi(query);
+    } else {
+      console.warn('askAi function not available');
+    }
+  }
+
+  // Open chatbot function
+  function openChatbot() {
+    if (typeof window?.openChatbot === 'function') {
+      window.openChatbot();
+    } else {
+      console.warn('openChatbot function not available');
+    }
   }
 
   // Create modal HTML structure
@@ -330,18 +423,63 @@
         font-size: 14px;
       }
 
+      .docstar-ask-ai-section {
+        padding: 12px 20px;
+        border-top: 1px solid #e5e7eb;
+        background: #f9fafb;
+      }
+
+      .docstar-ask-ai-label {
+        margin: 0 0 8px 0;
+        font-size: 12px;
+        color: #6b7280;
+        font-weight: 500;
+      }
+
+      .docstar-ask-ai-button {
+        width: 100%;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 12px;
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        font-size: 14px;
+        color: #374151;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+      }
+
+      .docstar-ask-ai-button:hover {
+        background: #e5e7eb;
+        border-color: #9ca3af;
+      }
+
+      .docstar-sparkles-icon {
+        color: #3b82f6;
+        flex-shrink: 0;
+      }
+
+      .docstar-ask-ai-button span {
+        flex: 1;
+        font-weight: 400;
+      }
 
       .docstar-iframe-sidebar {
         position: fixed;
         top: 0;
-        right: -30%;
-        width: 30%;
+        right: -40%;
+        width: 40%;
         height: 100vh;
-        background: white;
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
         box-shadow: -4px 0 20px rgba(0, 0, 0, 0.15);
         z-index: 999998;
         transition: right 0.3s ease;
-        border-left: 1px solid #e5e7eb;
+        border-left: 1px solid rgba(229, 231, 235, 0.8);
       }
 
       .docstar-iframe-sidebar.open {
@@ -353,32 +491,32 @@
         align-items: center;
         justify-content: space-between;
         padding: 16px 20px;
-        border-bottom: 1px solid #e5e7eb;
-        background: #f9fafb;
+        border-bottom: 1px solid rgba(229, 231, 235, 0.8);
+        background: rgba(249, 250, 251, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
       }
 
       .docstar-iframe-actions {
         display: flex;
+        justify-content: space-between;
         align-items: center;
         gap: 8px;
+        width: 100%;
       }
 
       .docstar-iframe-new-tab {
-        background: #3b82f6;
-        color: white;
+        background: none;
+        color: #374151;
         border: none;
-        padding: 6px 12px;
-        border-radius: 4px;
-        font-size: 12px;
+        padding: 0;
+        font-size: 14px;
         cursor: pointer;
         transition: all 0.2s;
-        display: flex;
-        align-items: center;
-        gap: 4px;
       }
 
       .docstar-iframe-new-tab:hover {
-        background: #2563eb;
+        color: #1f2937;
       }
 
       .docstar-iframe-title {
@@ -391,26 +529,26 @@
       .docstar-iframe-close {
         background: none;
         border: none;
-        padding: 4px;
+        padding: 0;
         cursor: pointer;
-        color: #6b7280;
-        border-radius: 4px;
+        color:rgb(243, 107, 107);
+        font-size: 14px;
         transition: all 0.2s;
       }
 
       .docstar-iframe-close:hover {
-        background: #e5e7eb;
-        color: #374151;
+        color: #1f2937;
       }
 
       .docstar-iframe-content {
         width: 100%;
         height: calc(100vh - 60px);
         border: none;
+        border-radius: 8px;
       }
 
       .docstar-iframe-sidebar.open ~ .docstar-search-modal {
-        padding-right: 30%;
+        padding-right: 40%;
       }
     `;
 
@@ -489,12 +627,32 @@
       `;
     }).join('');
 
-    searchResults.innerHTML = resultsHTML;
+    // Add Ask AI button after results
+    const askAIButton = `
+      <div class="docstar-ask-ai-section">
+        <p class="docstar-ask-ai-label">Ask AI assistant</p>
+        <button class="docstar-ask-ai-button" onclick="handleAskAI('${searchTerm.replace(/'/g, "\\'")}')">
+          <svg class="docstar-sparkles-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9.937 15.5A2 2 0 0 0 8.5 14.063l-6.135-1.582a.5.5 0 0 1 0-.962L8.5 9.936A2 2 0 0 0 9.937 8.5l1.582-6.135a.5.5 0 0 1 .963 0L14.063 8.5A2 2 0 0 0 15.5 9.937l6.135 1.582a.5.5 0 0 1 0 .963L15.5 14.063a2 2 0 0 0-1.437 1.437l-1.582 6.135a.5.5 0 0 1-.963 0L9.937 15.5Z"/>
+          </svg>
+          <span>Can you tell me about ${searchTerm}?</span>
+        </button>
+      </div>
+    `;
+
+    searchResults.innerHTML = resultsHTML + askAIButton;
 
     // Update search result items for navigation
     searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item');
     currentHighlightIndex = -1;
   }
+
+  // Handle Ask AI button click
+  window.handleAskAI = function (searchTerm) {
+    openChatbot();
+    askAI(searchTerm);
+    closeModal();
+  };
 
   // Handle result click
   window.handleResultClick = function (url, event) {
@@ -521,15 +679,14 @@
         <div class="docstar-iframe-header">
           <div class="docstar-iframe-actions">
             <button class="docstar-iframe-new-tab" onclick="openCurrentIframeInNewTab()" aria-label="Open in new tab">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
                 <polyline points="15,3 21,3 21,9"></polyline>
                 <line x1="10" y1="14" x2="21" y2="3"></line>
               </svg>
-              New Tab
             </button>
             <button class="docstar-iframe-close" onclick="closeIframeSidebar()" aria-label="Close preview">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                 <line x1="18" y1="6" x2="6" y2="18"></line>
                 <line x1="6" y1="6" x2="18" y2="18"></line>
               </svg>
@@ -800,6 +957,8 @@
     init: function (options = {}) {
       // Initialize modal without configuration
       initializeModal();
+      // Load chatbot
+      loadChatbot();
     },
 
     open: openModal,
@@ -833,6 +992,11 @@
       // Merge options with default config
       Object.assign(CONFIG, options);
       isConfigured = true;
+
+      // Initialize chatbot after configuration
+      if (chatbotLoaded) {
+        initializeChatbot();
+      }
 
       console.log('DocStar Search SDK: Configuration successful');
     }
