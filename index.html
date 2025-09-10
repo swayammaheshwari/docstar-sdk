@@ -526,6 +526,13 @@
                             </label>
                         </div>
 
+                        <div class="form-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" id="enableAskAI" checked>
+                                Enable "Ask AI" feature (Production only)
+                            </label>
+                        </div>
+
                         <button type="submit" class="btn-configure">Configure Search SDK</button>
                     </form>
 
@@ -604,6 +611,7 @@
             const openMode = document.getElementById('openMode').value;
             const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
             const enableKeyboardShortcut = document.getElementById('enableKeyboardShortcut').checked;
+            const enableAskAI = document.getElementById('enableAskAI').checked;
 
             // Validate required fields
             if (!collectionId || !openMode) {
@@ -619,6 +627,7 @@
                     openMode: openMode,
                     debounceDelay: debounceDelay,
                     enableKeyboardShortcut: enableKeyboardShortcut,
+                    enableAskAI: enableAskAI,
                     minSearchLength: 2
                 });
 
@@ -633,7 +642,8 @@
                     environment,
                     openMode,
                     debounceDelay,
-                    enableKeyboardShortcut
+                    enableKeyboardShortcut,
+                    enableAskAI
                 });
 
                 console.log('DocStar Search SDK configured with:', {
@@ -641,7 +651,8 @@
                     environment,
                     openMode,
                     debounceDelay,
-                    enableKeyboardShortcut
+                    enableKeyboardShortcut,
+                    enableAskAI
                 });
 
             } catch (error) {
@@ -667,13 +678,15 @@
                 const openMode = document.getElementById('openMode').value;
                 const debounceDelay = parseInt(document.getElementById('debounceDelay').value) || 300;
                 const enableKeyboardShortcut = document.getElementById('enableKeyboardShortcut').checked;
+                const enableAskAI = document.getElementById('enableAskAI').checked;
 
                 showIntegrationCode({
                     collectionId,
                     environment,
                     openMode,
                     debounceDelay,
-                    enableKeyboardShortcut
+                    enableKeyboardShortcut,
+                    enableAskAI
                 });
             } else {
                 showStatus('❌ Please configure the SDK first', 'error');
@@ -692,9 +705,11 @@
 <span class="keyword">&lt;script&gt;</span>
   <span class="function">window.DocStarSearch.configure</span>({
     <span class="string">collectionId</span>: <span class="string">"${config.collectionId}"</span>,
+    <span class="string">environment</span>: <span class="string">"${config.environment}"</span>,
     <span class="string">openMode</span>: <span class="string">"${config.openMode}"</span>,
     <span class="string">debounceDelay</span>: <span class="string">${config.debounceDelay}</span>,
     <span class="string">enableKeyboardShortcut</span>: <span class="string">${config.enableKeyboardShortcut}</span>,
+    <span class="string">enableAskAI</span>: <span class="string">${config.enableAskAI}</span>,
     <span class="string">minSearchLength</span>: <span class="string">2</span>
   });
 <span class="keyword">&lt;/script&gt;</span>`;

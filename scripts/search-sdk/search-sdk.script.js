@@ -15,7 +15,8 @@
     debounceDelay: 300,
     minSearchLength: 2,
     openMode: 'iframe', // 'iframe', 'newTab', or 'currentTab'
-    enableKeyboardShortcut: true // Enable Cmd/Ctrl+K shortcut
+    enableKeyboardShortcut: true, // Enable Cmd/Ctrl+K shortcut
+    enableAskAI: true // Enable Ask AI feature
   };
 
   // Global state
@@ -267,6 +268,87 @@
         display: none;
       }
 
+      .docstar-search-ai-option {
+        display: flex;
+        align-items: center;
+        padding: 12px 20px;
+        cursor: pointer;
+        transition: background-color 0.15s;
+        text-decoration: none;
+        color: inherit;
+        border-left: 3px solid transparent;
+        border-top: 1px solid #e5e7eb;
+        background: #f8fafc;
+      }
+
+      .docstar-search-ai-option:hover,
+      .docstar-search-ai-option.highlighted {
+        background: #eff6ff;
+        border-left-color: #3b82f6;
+      }
+
+      .docstar-search-ai-option .docstar-search-result-icon {
+        color: #3b82f6;
+      }
+
+      .docstar-search-result-subtitle {
+        font-size: 12px;
+        color: #6b7280;
+        margin-top: 2px;
+      }
+
+      .docstar-search-ai-response {
+        padding: 20px;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+        line-height: 1.6;
+        font-size: 14px;
+        color: #374151;
+      }
+
+      .docstar-search-ai-response h4 {
+        margin: 0 0 12px 0;
+        color: #1f2937;
+        font-size: 16px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .docstar-ai-response-content {
+        margin: 0;
+      }
+
+      .docstar-ai-response-content a {
+        color: #3b82f6;
+        text-decoration: underline;
+        font-weight: 500;
+      }
+
+      .docstar-ai-response-content a:hover {
+        color: #2563eb;
+        text-decoration: none;
+      }
+
+      .docstar-search-ai-loading {
+        padding: 20px;
+        background: #f8fafc;
+        border-top: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        color: #6b7280;
+      }
+
+      .docstar-search-ai-error {
+        padding: 20px;
+        background: #fef2f2;
+        border-top: 1px solid #fecaca;
+        color: #991b1b;
+        font-size: 14px;
+      }
+
       .docstar-search-loading {
         display: flex;
         align-items: center;
@@ -489,10 +571,27 @@
       `;
     }).join('');
 
-    searchResults.innerHTML = resultsHTML;
+    // Add AI chatbot option at the end (only for production environment and if enabled)
+    let aiOptionHTML = '';
+    if (CONFIG.environment === 'prod' && CONFIG.enableAskAI) {
+      aiOptionHTML = `
+        <div class="docstar-search-ai-option" data-index="${links.length}" onclick="handleAIQuery('${searchTerm}', event)">
+          <svg class="docstar-search-result-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+            <circle cx="12" cy="17" r=".02"></circle>
+          </svg>
+          <div class="docstar-search-result-content">
+            <div class="docstar-search-result-title">Can you tell me about "${searchTerm}"?</div>
+            <div class="docstar-search-result-subtitle">Ask AI for more information</div>
+          </div>
+        </div>
+      `;
+    }
+
+    searchResults.innerHTML = resultsHTML + aiOptionHTML;
 
     // Update search result items for navigation
-    searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item');
+    searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item, .docstar-search-ai-option');
     currentHighlightIndex = -1;
   }
 
@@ -512,6 +611,123 @@
 
     // Close search modal
     closeModal();
+  };
+
+  // Process links in AI response
+  function processLinksInResponse(text) {
+    // Convert markdown-style links [text](url) to HTML links
+    text = text.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank">$1</a>');
+    
+    // Convert plain URLs to clickable links
+    text = text.replace(/(https?:\/\/[^\s]+)/g, '<a href="$1" target="_blank">$1</a>');
+    
+    return text;
+  }
+
+  // Handle AI query
+  window.handleAIQuery = async function (searchTerm, event) {
+    event.preventDefault();
+
+    // Only work in production environment and if enabled
+    if (CONFIG.environment !== 'prod' || !CONFIG.enableAskAI) {
+      return;
+    }
+
+    // Show only loading state (remove all previous results)
+    const aiLoadingHTML = `
+      <div class="docstar-search-ai-loading">
+        <div class="docstar-search-spinner"></div>
+        <span>Asking AI about "${searchTerm}"...</span>
+      </div>
+    `;
+    
+    searchResults.innerHTML = aiLoadingHTML;
+
+    try {
+      const response = await fetch('https://api.docstar.io/p/chatbot/wAkjF0zqiO2E/find-matches', {
+        method: 'POST',
+        headers: {
+          'accept': '*/*',
+          'accept-language': 'en-US,en;q=0.9',
+          'content-type': 'application/json',
+          'sec-ch-ua': '"Not)A;Brand";v="8", "Chromium";v="138", "Google Chrome";v="138"',
+          'sec-ch-ua-mobile': '?0',
+          'sec-ch-ua-platform': '"macOS"',
+          'sec-fetch-dest': 'empty',
+          'sec-fetch-mode': 'cors',
+          'sec-fetch-site': 'cross-site',
+          'user-agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/138.0.0.0 Safari/537.36'
+        },
+        body: JSON.stringify({
+          prompt: `tell me about ${searchTerm}`,
+          getResponseFromAi: true
+        })
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      
+      // Handle different response formats
+      let aiResponse;
+      if (typeof data === 'string') {
+        aiResponse = data;
+      } else if (data.response) {
+        aiResponse = data.response;
+      } else if (data.message) {
+        aiResponse = data.message;
+      } else if (data.answer) {
+        aiResponse = data.answer;
+      } else if (data.result) {
+        aiResponse = data.result;
+      } else if (data.text) {
+        aiResponse = data.text;
+      } else {
+        // If it's an object, try to find the actual response text
+        const possibleKeys = Object.keys(data);
+        aiResponse = data[possibleKeys[0]] || JSON.stringify(data);
+      }
+      
+      if (!aiResponse || aiResponse.trim() === '') {
+        aiResponse = 'No response received from AI.';
+      }
+      
+      // Process links in the response
+      aiResponse = processLinksInResponse(aiResponse);
+
+      // Display AI response (replace all content)
+      const aiResponseHTML = `
+        <div class="docstar-search-ai-response">
+          <h4>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+              <circle cx="12" cy="17" r=".02"></circle>
+            </svg>
+            AI Response about "${searchTerm}"
+          </h4>
+          <div class="docstar-ai-response-content">${aiResponse}</div>
+        </div>
+      `;
+      
+      searchResults.innerHTML = aiResponseHTML;
+
+    } catch (error) {
+      // Show error message (replace all content)
+      const aiErrorHTML = `
+        <div class="docstar-search-ai-error">
+          <strong>Unable to get AI response</strong><br>
+          Please try again later or contact support if the issue persists.
+        </div>
+      `;
+      
+      searchResults.innerHTML = aiErrorHTML;
+    }
+
+    // Update search result items for navigation (excluding AI response)
+    searchResultItems = searchResults.querySelectorAll('.docstar-search-result-item');
+    currentHighlightIndex = -1;
   };
 
   // Create iframe sidebar
