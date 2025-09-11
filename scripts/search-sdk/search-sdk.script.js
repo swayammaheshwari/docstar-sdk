@@ -131,6 +131,66 @@
     }
   }
 
+  // Add hamburger menu to small screen header
+  function addHamburgerMenu() {
+    try {
+      const iframe = document.getElementById('docstar-iframe-content');
+      if (iframe && iframe.contentDocument) {
+        const smallScreenHeader = iframe.contentDocument.getElementById('docstar-small-screen-header');
+        if (smallScreenHeader) {
+          // Add new tab and close icons to the right side of the header
+          const additionalIconsHTML = `
+            <div class="d-flex align-items-center ms-auto">
+              <div class="icon-button cursor-pointer d-flex justify-content-center align-items-center" onclick="parent.openCurrentIframeInNewTab()" title="Open in new tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15,3 21,3 21,9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </div>
+              <div class="icon-button cursor-pointer d-flex justify-content-center align-items-center" onclick="parent.closeIframeSidebar()" title="Close">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </div>
+            </div>
+          `;
+          smallScreenHeader.insertAdjacentHTML('beforeend', additionalIconsHTML);
+          console.log('New tab and close icons added successfully');
+        } else {
+          console.log('docstar-small-screen-header not found in iframe');
+        }
+      }
+    } catch (error) {
+      console.warn('Cannot access iframe content due to cross-origin restrictions:', error);
+      // Fallback: try to communicate with iframe via postMessage
+      const iframe = document.getElementById('docstar-iframe-content');
+      if (iframe) {
+        iframe.contentWindow.postMessage({
+          type: 'ADD_IFRAME_CONTROLS',
+          iconsHTML: `
+            <div class="d-flex align-items-center ms-auto">
+              <div class="icon-button cursor-pointer d-flex justify-content-center align-items-center" onclick="parent.postMessage({type: 'OPEN_NEW_TAB'}, '*')" title="Open in new tab">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15,3 21,3 21,9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+              </div>
+              <div class="icon-button cursor-pointer d-flex justify-content-center align-items-center" onclick="parent.postMessage({type: 'CLOSE_IFRAME'}, '*')" title="Close">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <line x1="18" y1="6" x2="6" y2="18"></line>
+                  <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+              </div>
+            </div>
+          `
+        }, '*');
+      }
+    }
+  }
+
   // Create modal HTML structure
   function createModalHTML() {
     return `
@@ -542,7 +602,7 @@
 
       .docstar-iframe-content {
         width: 100%;
-        height: calc(100vh - 60px);
+        height: 100vh;
         border: none;
         border-radius: 8px;
       }
@@ -676,23 +736,6 @@
   function createIframeSidebar() {
     const sidebarHTML = `
       <div id="docstar-iframe-sidebar" class="docstar-iframe-sidebar">
-        <div class="docstar-iframe-header">
-          <div class="docstar-iframe-actions">
-            <button class="docstar-iframe-new-tab" onclick="openCurrentIframeInNewTab()" aria-label="Open in new tab">
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
-                <polyline points="15,3 21,3 21,9"></polyline>
-                <line x1="10" y1="14" x2="21" y2="3"></line>
-              </svg>
-            </button>
-            <button class="docstar-iframe-close" onclick="closeIframeSidebar()" aria-label="Close preview">
-             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <line x1="18" y1="6" x2="6" y2="18"></line>
-                <line x1="6" y1="6" x2="18" y2="18"></line>
-              </svg>
-            </button>
-          </div>
-        </div>
         <iframe id="docstar-iframe-content" class="docstar-iframe-content" src="about:blank"></iframe>
       </div>
     `;
@@ -717,7 +760,12 @@
     isIframeOpen = true;
 
     // Adjust body padding
-    document.body.style.paddingRight = '30%';
+    document.body.style.paddingRight = '40%';
+
+    // Add hamburger menu after iframe loads
+    iframe.onload = function () {
+      setTimeout(addHamburgerMenu, 1000);
+    };
   }
 
   // Open current iframe content in new tab
@@ -950,6 +998,15 @@
 
     // Global keyboard shortcuts
     document.addEventListener('keydown', handleKeydown);
+
+    // Listen for messages from iframe
+    window.addEventListener('message', function(event) {
+      if (event.data.type === 'CLOSE_IFRAME') {
+        closeIframeSidebar();
+      } else if (event.data.type === 'OPEN_NEW_TAB') {
+        openCurrentIframeInNewTab();
+      }
+    });
   }
 
   // Configuration function
