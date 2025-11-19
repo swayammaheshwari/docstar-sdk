@@ -650,7 +650,14 @@
 
   // Display search results
   function displayResults(data, searchTerm) {
-    if (!data || !data.links || !Array.isArray(data.links)) {
+    // Handle new response format - direct array
+    let results = [];
+    if (Array.isArray(data)) {
+      results = data;
+    } else if (data && data.links && Array.isArray(data.links)) {
+      // Backward compatibility with old format
+      results = data.links;
+    } else {
       searchResults.innerHTML = `
         <div class="docstar-search-no-results">
           <p>No results found for "${searchTerm}"</p>
@@ -659,8 +666,7 @@
       return;
     }
 
-    const links = data.links;
-    if (links.length === 0) {
+    if (results.length === 0) {
       searchResults.innerHTML = `
         <div class="docstar-search-no-results">
           <p>No results found for "${searchTerm}"</p>
@@ -669,8 +675,9 @@
       return;
     }
 
-    const resultsHTML = links.map((item, index) => {
-      const url = item.link || '#';
+    const resultsHTML = results.map((item, index) => {
+      // Handle new format: use 'links' field for URL and 'name' field for title
+      const url = item.links || item.link || '#';
       const title = item.name || 'Untitled';
 
       return `
@@ -1000,7 +1007,7 @@
     document.addEventListener('keydown', handleKeydown);
 
     // Listen for messages from iframe
-    window.addEventListener('message', function(event) {
+    window.addEventListener('message', function (event) {
       if (event.data.type === 'CLOSE_IFRAME') {
         closeIframeSidebar();
       } else if (event.data.type === 'OPEN_NEW_TAB') {
