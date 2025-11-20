@@ -885,7 +885,7 @@
 
     showLoading();
     const results = await searchAPI(searchTerm);
-    displayResults(results, searchTerm);
+    displayResults(results.data, searchTerm);
   }, CONFIG.debounceDelay);
 
   // Handle search input
